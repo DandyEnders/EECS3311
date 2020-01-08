@@ -29,10 +29,13 @@ feature {NONE} -- Initialization
 	make
 			-- initialize tests
 		do
-			add_boolean_case (agent t0)
-			add_boolean_case (agent t1)
-			add_boolean_case (agent t2)
-			add_boolean_case (agent t3)
+			--add_boolean_case (agent t0)
+			--add_boolean_case (agent t1)
+			--add_boolean_case (agent t2)
+			--add_boolean_case (agent t3)
+			add_boolean_case (agent my_t1)
+			add_boolean_case (agent my_t2)
+			add_boolean_case (agent my_t3)
 		end
 
 feature -- tests
@@ -41,6 +44,7 @@ feature -- tests
 		do
 			comment ("t0: First test fails as Result = False")
 				-- this test will fail because Result = False
+			Result := True
 		end
 
 	t1: BOOLEAN
@@ -124,5 +128,38 @@ feature -- Regular Expression tests
 			replace := a_regexp.replace ("<\1\>")
 			Result := replace ~ "hello ei<ff>elians"
 		end
+
+feature
+	my_t1: BOOLEAN
+		-- MY_COUNTER Constructor test
+	local
+		c: MY_COUNTER
+	do
+		comment("my_t1: Constructor of MY_COUNTER Test")
+		create {MY_COUNTER} c.make(0)
+		Result := (c.value = 0)
+	end
+
+	my_t2: BOOLEAN
+		-- MY_COUNTER increment test
+	local
+		c: MY_COUNTER
+	do
+		comment("my_t2: increment_by of MY_COUNTER Test")
+		create {MY_COUNTER} c.make(0)
+		c.increment_by(5)
+		Result := (c.value = 5)
+	end
+
+	my_t3: BOOLEAN
+		-- MY_COUNTER decrement test
+	local
+		c: MY_COUNTER
+	do
+		comment("my_t3: decrement_by of MY_COUNTER Test")
+		create {MY_COUNTER} c.make(10)
+		c.decrement_by(5)
+		Result := (c.value = 5)
+	end
 
 end
