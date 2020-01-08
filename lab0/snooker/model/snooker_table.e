@@ -17,6 +17,14 @@ feature {NONE} -- Initialization
 			-- Initialization for Current.
 		require
 				a_blue /~ a_red
+		do
+			blue := a_blue
+			red := a_red
+			pocket := create {BALL_POINT}.make(width, length)
+		ensure
+			blue = a_blue and red = a_red
+		end
+
 feature -- queries
 	blue: BALL_POINT
 
@@ -26,6 +34,8 @@ feature -- queries
 
 	terminated: BOOLEAN
 			-- game terminates when either ball is in pocket
+		do
+			Result := (blue ~ pocket or red ~ pocket)
 		ensure
 				Result = (blue ~ pocket or red ~ pocket)
 		end
@@ -40,6 +50,8 @@ feature -- commands
 			not_red: red /~ {BALL_POINT}.t2ball
 				(create {TUPLE2}.make_from_tuple
 					([blue.x + delta.x, blue.y + delta.y]))
+		do
+			blue.cue_delta(delta.x, delta.y)
 		ensure
 			new_blue_x: blue.x ~ old blue.x + delta.x
 			new_blue_y: blue.y ~ old blue.y + delta.y
@@ -54,6 +66,8 @@ feature -- commands
 			not_red: red /~ {BALL_POINT}.t2ball
 				(create {TUPLE2}.make_from_tuple
 					([red.x + delta.x, red.y + delta.y]))
+		do
+			red.cue_delta(delta.x, delta.y)
 		ensure
 			new_red_x: red.x ~ old red.x + delta.x
 			new_red_y: red.y ~ old red.y + delta.y

@@ -34,6 +34,9 @@ feature {NONE}
 		require
 			x_precondition: Zero <= a_x and a_x <= Width
 			y_precondition: Zero <= a_y and a_y <= Length
+		do
+			x := a_x
+			y := a_y
 		ensure
 				x = a_x and y = a_y
 		end
@@ -42,6 +45,9 @@ feature {NONE}
 			-- create a snooker ball at position `t`
 		require
 				safe (t.x, t.y)
+		do
+			x := t.x
+			y := t.y
 		ensure
 				x = t.x and y = t.y
 		end
@@ -57,6 +63,11 @@ feature -- queries
 	safe (a_x, a_y: DECIMAL): BOOLEAN
 			-- is position [a_x, a_y] within the dimensions
 			-- of the snooker table?
+		do
+			Result := (Zero <= a_x
+				and a_x <= Width
+				and Zero <= a_y
+				and a_y <= Length)
 		ensure
 			class  -- static
 			Result = (Zero <= a_x
@@ -65,12 +76,12 @@ feature -- queries
 				and a_y <= Length)
 		end
 
-
-
 	t2ball (t: TUPLE2): like Current
 			-- convert tuple `t` to a ball position
 		require
 				safe (t.x, t.y)
+		do
+			Result := create {BALL_POINT}.make_from_tuple2 (t)
 		ensure
 				class
 				Result ~ create {BALL_POINT}.make_from_tuple2 (t)
@@ -81,6 +92,8 @@ feature -- comparison
 	is_equal (other: like Current): BOOLEAN
 			-- Is other attached to an object considered
 			-- equal to current object?
+		do
+			Result := (x ~ other.x and y ~ other.y)
 		ensure then
 				Result = (x ~ other.x and y ~ other.y)
 		end
@@ -88,6 +101,8 @@ feature -- comparison
 	distance (other: like Current): TUPLE2
 			-- distance as a tuple from  current ball
 			-- to position of other ball
+		do
+			Result := create {TUPLE2}.make_from_tuple ([other.x - x, other.y - y])
 		ensure
 			Result ~
 			   create {TUPLE2}.make_from_tuple ([other.x - x, other.y - y])
@@ -100,6 +115,10 @@ feature -- commands
 		require
 			x_cue_precondition: Zero <= x + d_x and x + d_x <= Width
 			y_cue_precondition: Zero <= y + d_y and y + d_y <= Length
+
+		do
+			x := x + d_x
+			y := y + d_y
 		ensure
 				x ~ (old x + d_x)
 				y ~ (old y + d_y)
