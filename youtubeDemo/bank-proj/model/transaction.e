@@ -7,6 +7,12 @@ note
 class
 	TRANSACTION
 
+inherit
+	ANY
+		redefine
+			is_equal
+		end
+
 create
 	make
 
@@ -25,6 +31,14 @@ feature -- Attribute
 	value: INTEGER
 	date: DATE
 
+feature -- Equality
+	is_equal (other: like Current): BOOLEAN -- anchor type
+		-- Are two transactions' date and value equal?
+	do
+		Result :=
+			value = other.value and
+			date ~ other.date
+	end
 invariant
 	valid_value:
 		value > 0

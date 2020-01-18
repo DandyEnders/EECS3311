@@ -28,6 +28,7 @@ feature -- Collect all tests for ACCOUNT
 			add_violation_case_with_tag ("not_too_big", agent test_account_withdraw_precondition_not_too_weak)
 			add_boolean_case (agent test_account_withdraw_precondition_not_too_strong)
 
+			add_boolean_case(agent test_transaction_value_and_date)
 
 		end
 
@@ -110,6 +111,47 @@ feature -- Test cases for ACCOUNT
 
 			acc.withdraw(6)
 			Result := acc.balance = -6 and acc.credit = 10
+			check Result end
+		end
+feature -- Specification Test
+
+	test_transaction_value_and_date: BOOLEAN
+			-- Test deposit and withdraw transactions on dates.
+		local
+			a: ACCOUNT
+			today, tomorrow: DATE
+			w1, w2, w3: TRANSACTION
+			today_withdrawals: ARRAY[TRANSACTION]
+		do
+			comment ("t5: test transaction value and date")
+			-- create today
+			create today.make_now
+
+			-- create tomorrow
+			create tomorrow.make_now
+			tomorrow.day_forth
+
+			-- initialize an account of zero credit
+			create a.make(0)
+
+			a.deposit (5500)
+			a.withdraw_on_date (400, tomorrow)
+			a.withdraw (1000)
+			a.withdraw (4000)
+
+			Result := a.balance = 100 and a.withdrawals_today = 5000
+			check Result end
+			today_withdrawals := a.withdrawals_on (today)
+			Result := today_withdrawals.count = 2
+			check Result end
+
+			create w1.make (1000, today)
+			create w2.make (4000, today)
+			create w3.make (400, tomorrow)
+
+			Result := today_withdrawals.has (w1) and
+			today_withdrawals.has (w2) and
+			not today_withdrawals.has (w3)
 			check Result end
 		end
 
