@@ -14,16 +14,20 @@
 				An edge has a source vertex and destination vertex.
 				Vertices and Edges must be attached.
 	]"
-	ca_ignore: "CA023", "CA005", "CA023: Undeed parentheses", "CA017", "CA107: Empty compound after then part of if"
-	author: "JSO and JW"
-	note_to_student: "[
-			Only modify features that have a `Todo` comment inside of them.
-	]"
+	ca_ignore: "CA023", "CA023: Undeed parentheses", "CA017", "CA107: Empty compound after then part of if"
+	author: "JSO and JW and Jinho Hwang"
+	date: "$Date$"
+	revision: "$Revision$"
 
 class
 	LIST_GRAPH [G -> COMPARABLE]
 
 inherit
+
+	ITERABLE [VERTEX [G]]
+		redefine
+			out
+		end
 
 	DEBUG_OUTPUT
 		redefine
@@ -33,6 +37,33 @@ inherit
 create
 	make_empty, make_from_array
 
+feature -- Model
+
+	model: COMPARABLE_GRAPH [VERTEX [G]]
+			-- abstraction function
+			-- This must be implemented so that the contracts will work properly
+			-- You must find a way to translate the `LIST_GRAPH` implementation into the mathematical
+			-- model representation of a graph: `COMPARABLE_GRAPH` (which inherits from `GRAPH`).
+		do
+			create Result.make_empty
+
+			across
+				vertices is i_vertex
+			loop
+				Result.vertex_extend (i_vertex)
+			end
+
+			across
+				edges is i_edge
+			loop
+				Result.edge_extend ([i_edge.source, i_edge.destination])
+			end
+				-- tofix
+		ensure
+			comment ("Establishes model consistency invariants")
+
+		end
+
 feature {NONE} -- Initialization
 
 	make_empty
@@ -41,12 +72,12 @@ feature {NONE} -- Initialization
 			create {LINKED_LIST [VERTEX [G]]} vertices.make
 			vertices.compare_objects
 		ensure
-			cl_empty_graph: is_empty
+			mm_empty_graph: model.is_empty
 		end
 
 	get_vertex (g: G): detachable VERTEX [G]
-			-- Return the associated vertex object storing `g`, if any.
-			-- Note: In the invariant, it is asserted that all vertices are unique.
+			-- Return the associated vertext object storing `g`, if any.
+			-- Note. In the invariant, it is asserted that all vertices are unique.
 		do
 			across
 				vertices as v
@@ -55,18 +86,15 @@ feature {NONE} -- Initialization
 					Result := v.item
 				end
 			end
+			-- tofix
 		ensure
-			cl_attached: attached Result implies has_vertex (Result) and Result.item ~ g
-			cl_not_attached:
-					-- the consequence cannot be `has_vertex (create {VERTEX[G]}.make (g))` because
-					-- its incoming/outgoing edges are initialized to empty
-					-- (which may not be the case of the actual vertex associated with `g`)
-				not attached Result implies not (across vertices as l_v some l_v.item ~ create {VERTEX [G]}.make (g) end)
+			mm_attached: attached Result implies model.has_vertex (create {VERTEX [G]}.make (g))
+			mm_not_attached: not attached Result implies not model.has_vertex (create {VERTEX [G]}.make (g))
 		end
 
 	make_from_array (a: ARRAY [TUPLE [src: G; dst: G]])
-			-- Create a new list graph from an array of tuples.
-			-- Each tuple specifies an edge.
+			-- create a new graph from an array of tuples
+			-- each tuple stores contents for the source and the destination
 		require
 			a.object_comparison
 		local
@@ -100,69 +128,79 @@ feature {NONE} -- Initialization
 				end
 			end
 		ensure
-			cl_edges: across a as l_edge all has_edge ([create {VERTEX [G]}.make (l_edge.item.src), create {VERTEX [G]}.make (l_edge.item.dst)]) end
-			cl_vertices: across a as l_edge all has_vertex (create {VERTEX [G]}.make (l_edge.item.src)) or has_vertex (create {VERTEX [G]}.make (l_edge.item.dst)) end
+			mm_edges:
+				-- ∀ [src, dst] ∈ a : [src, dst] ∈ model.edges
+				across a as l_edge all
+					model.has_edge ([create {VERTEX [G]}.make (l_edge.item.src),
+												 create {VERTEX [G]}.make (l_edge.item.dst)])
+				end
+
+			mm_vertices:
+				-- ∀ [src, dst] ∈ a : src ∈ model.vertices ∧ dst ∈ model.vertices
+				across a as l_edge all
+					model.has_vertex (create {VERTEX [G]}.make (l_edge.item.src))
+					and
+					model.has_vertex (create {VERTEX [G]}.make (l_edge.item.dst))
+				end
+		end
+
+feature -- Iterator Pattern
+
+	new_cursor: ITERATION_CURSOR [VERTEX [G]]
+			-- returns a new cursor for current graph
+		do
+			Result := vertices.new_cursor
 		end
 
 feature -- queries
 
 	vertices: LIST [VERTEX [G]]
-		-- LIST to hold the vertices in the graph
+			-- list of vertices
 
 	vertex_count: INTEGER
 			-- number of vertices
 		do
 			Result := vertices.count
+			-- tofix
 		ensure
-			cl_vertex_count: Result = vertices.count
+			mm_vertex_count: Result = model.vertex_count
 		end
 
 	edge_count: INTEGER
 			-- number of outgoing edges
 		do
-			across
-				vertices as l_vertex
-			loop
-				Result := Result + l_vertex.item.outgoing_edge_count
-			end
+			Result := edges.count
+			-- tofix
 		ensure
-			cl_edge_count: Result = edges.count
+			mm_edge_count: Result = model.edge_count
 		end
 
 	is_empty: BOOLEAN
 			-- does the graph contain no vertices?
 		do
 			Result := vertices.is_empty
+			-- tofix
 		ensure
 			comment ("See invariant empty_consistency")
-			cl_is_empty: Result = vertices.is_empty
+			mm_is_empty: Result = model.is_empty
 		end
 
 	has_vertex (a_vertex: VERTEX [G]): BOOLEAN
-			-- does the graph contain `a_vertex`?
+			-- does the current graph have `a_vertex`?
 		do
 			Result := vertices.has (a_vertex)
+			-- tofix
 		ensure
-			cl_has_vertex: Result = vertices.has (a_vertex)
+			mm_has_vertex: Result = model.has_vertex (a_vertex)
 		end
 
 	has_edge (a_edge: EDGE [G]): BOOLEAN
-			-- does the graph contain `a_edge`?
-		local
-			i: INTEGER
+			-- does the current graph have `a_edge`?
 		do
-			from
-				i := 1
-			until
-				i > vertex_count or Result
-			loop
-				if vertices [i].has_outgoing_edge (a_edge) then
-					Result := True
-				end
-				i := i + 1
-			end
+			Result := edges.has (a_edge)
+			-- tofix
 		ensure
-			cl_has_edge: Result = edges.has (a_edge)
+			mm_has_edge: Result = model.has_edge ([a_edge.source, a_edge.destination])
 		end
 
 	edges: ARRAY [EDGE [G]]
@@ -179,12 +217,97 @@ feature -- queries
 				end
 			end
 			Result.compare_objects
+			-- tofix
 		ensure
-			cl_edges_count: Result.count = edge_count
-			cl_edges_membership: across Result as l_edge all has_edge (l_edge.item) end
+			mm_edges_count: Result.count = model.edge_count
+			mm_edges_membership: across Result as l_edge all model.has_edge ([l_edge.item.source, l_edge.item.destination]) end
 		end
 
 feature -- Advanced Queries
+
+	topologically_sorted: ARRAY [VERTEX [G]]
+			-- Return an array <<..., vi, ..., vj, ...>> such that
+			-- (vi, vj) in edges => i < j
+			-- A topological sort is performed.
+		require
+			is_acyclic: model.is_acyclic
+
+		local
+			clone_vertices: LIST[VERTEX[G]]
+			queue: LINKED_LIST[VERTEX[G]]
+			front: VERTEX[G]
+
+			u: VERTEX[G]
+		do
+			from
+				create Result.make_empty
+				-- init queue, clone vertices, find all non-incoming vertex
+				create queue.make
+				clone_vertices := vertices.deep_twin
+				across clone_vertices is i_vertex loop
+					if (i_vertex.incoming_edge_count = 0) then
+						queue.force(i_vertex)
+					end
+				end
+			until
+				queue.is_empty
+			loop
+				front := queue.first -- get first
+				queue.prune_all (queue.first) -- remove front of queue
+				Result.force (front, (Result.count + 1)) -- append front
+
+				across
+					front.outgoing_sorted is i_out_edge
+				loop
+					u := i_out_edge.destination
+					u.remove_edge (i_out_edge)
+					if(u.incoming_edge_count = 0) then
+						queue.force(u)
+					end
+				end
+			end
+			Result.compare_objects
+			-- tofix
+		ensure
+			mm_sorted: Result ~ model.topologically_sorted.as_array
+		end
+
+	is_topologically_sorted (seq: like topologically_sorted): BOOLEAN
+			-- does `seq` represent a topological order of the current graph?
+		local
+			count_same: BOOLEAN
+			vertex_same: BOOLEAN
+			former_smaller: BOOLEAN
+		do
+			count_same := seq.count = vertices.count
+			Result := count_same
+
+			vertex_same :=
+				across
+					seq is i_vertex
+				all
+					vertices.has (i_vertex)
+				end
+			Result := Result and vertex_same
+
+			former_smaller :=
+				across
+					1 |..| seq.count as i	-- Why is i
+				all
+					across
+						1 |..| seq.count as j
+					all
+						i.item ~ j.item or else (has_edge(create {EDGE[G]}.make(seq[i.item], seq[j.item])) implies i.item < j.item)
+					end
+				end
+			Result := Result and former_smaller
+
+			-- tofix
+			ensure
+				sorted: Result ~ model.is_topologically_sorted (seq)
+		end
+
+feature -- advanced queries (Lab 1)
 
 	reachable (src: VERTEX [G]): ARRAY [VERTEX [G]]
 			-- Starting with vertex `src`, return the list of vertices visited via a breadth-first search.
@@ -192,7 +315,7 @@ feature -- Advanced Queries
 			-- so that the resulting array is uniquely ordered.
 			-- Note. `outgoing_sorted` is somewhat analogous to `adjacent` in the abstract algorithm documentation of BFS.
 		require
-			cl_existing_source: has_vertex (src)
+			mm_existing_source: model.has_vertex (src)
 		local
 			-- my_src, the actual graph's starting point
 			-- queue, the searching queue
@@ -227,38 +350,31 @@ feature -- Advanced Queries
 					end
 				end
 			end
-				-- done.
 			Result := visited
+				-- tofix
 		ensure
-			cl_valid_vertices: across Result as l_x all has_vertex (l_x.item) end
+			mm_reachable_in_model: model.reachable (src).as_array ~ Result
 		end
 
 feature -- commands
 
 	add_vertex (a_vertex: VERTEX [G])
-			-- Add `a_vertex` into current graph
+			-- adds `a_vertex` to current graph
 		require
-			cl_non_existing_vertex: not has_vertex (a_vertex)
+			mm_non_existing_vertex: not model.has_vertex (a_vertex)
 		do
-			-- Make sure it is a fresh vertex, encapsulating it.
-			vertices.force (create {VERTEX[G]}.make (a_vertex.item))
-			-- done.
+			vertices.force (a_vertex)
+			-- tofix
 		ensure
-			cl_add_vertex_membership: has_vertex (a_vertex) -- done.
-			cl_add_vertex_others_unchanged: -- done.
-				across vertices is l_vertex
-				all
-					l_vertex /~ a_vertex implies (old vertices).has (l_vertex)
-				end
-			cl_add_vertex_count: vertex_count = old vertex_count + 1
+			mm_vertex_added: model ~ (old model.deep_twin) + a_vertex
 		end
 
 	add_edge (a_edge: EDGE [G])
-			-- Add `a_edge` to current graph
+			-- adds `a_edge` to the current graph
 		require
-			cl_existing_source_vertex: has_vertex (a_edge.source)
-			cl_existing_destination_vertex: has_vertex (a_edge.destination)
-			cl_non_existing_edge: not has_edge (a_edge)
+			mm_existing_source_vertex: model.has_vertex (a_edge.source)
+			mm_existing_destination_vertex: model.has_vertex (a_edge.destination)
+			mm_non_existing_edge: not model.has_edge ([a_edge.source, a_edge.destination])
 		local
 			src, dst: VERTEX [G]
 			new_edge: EDGE [G]
@@ -279,25 +395,15 @@ feature -- commands
 					dst_att.add_edge (new_edge)
 				end
 			end
-			-- done.
+			-- tofix
 		ensure
-			cl_add_edge_membership: has_edge(a_edge) -- done.
-			cl_add_edge_others_unchanged: -- done.
-				across edges is l_edge
-				all
-					l_edge /~ a_edge implies (old edges).has (l_edge)
-				end
-			cl_add_edge_count: edge_count = old edge_count + 1
+			mm_edge_added: model ~ (old model.deep_twin) |\/| [a_edge.source, a_edge.destination]
 		end
 
 	remove_edge (a_edge: EDGE [G])
-			-- Remove `a_edge` from current graph
+			-- removes `a_edge` from the current graph
 		require
-			cl_existing_source_vertex: has_vertex (a_edge.source)
-			cl_existing_destination_vertex: has_vertex (a_edge.destination)
-			cl_existing_edge: has_edge (a_edge)
-		local
-			src, dst: VERTEX [G]
+			mm_existing_edge: model.has_edge ([a_edge.source, a_edge.destination])
 		do
 			across vertices is l_vertex
 			loop
@@ -306,18 +412,16 @@ feature -- commands
 					l_vertex.remove_edge(a_edge)
 				end
 			end
-			-- done.
+			-- tofix
 		ensure
-			cl_remove_edge_count: edge_count = old edge_count - 1
-			cl_remove_edge_membership: not has_edge (a_edge)
+			mm_edge_removed: model ~ (old model.deep_twin) |\ [a_edge.source, a_edge.destination]
 		end
 
 	remove_vertex (a_vertex: VERTEX [G])
-			-- Remove `a_vertex` from current graph
+			-- removes `a_vertex` from the current graph
 		require
-			cl_existing_vertex: has_vertex (a_vertex)
+			mm_existing_vertex: model.has_vertex (a_vertex)
 		local
-			l_edge: EDGE [G]
 			v: VERTEX [G]
 		do
 			-- I grab the vertex, go through incoming and outgoing and remove all edges on them.
@@ -343,24 +447,22 @@ feature -- commands
 				-- Finally, when the vertex is isolated in graph, we remove it.
 				vertices.prune_all (v_att)
 			end
-			-- done.
+			-- tofix
 		ensure
-			cl_remove_vertex_count: vertex_count = old vertex_count - 1
-			cl_remove_vertex_membership: not has_vertex (a_vertex)
+			mm_vertex_removed: model ~ (old model.deep_twin) - a_vertex
 		end
 
 feature -- out
 
 	comment (s: STRING): BOOLEAN
-			-- Return string representation of current list graph
 		do
 			Result := true
 		end
 
 	debug_output: STRING
-			-- Return string representation of current list graph in debugger
+			-- returns a string representation of current graph
+			-- in the debugger
 		do
-				--			Result := out
 			Result := ""
 			across
 				vertices as l_vertex
@@ -370,6 +472,7 @@ feature -- out
 		end
 
 	out: STRING
+			-- returns a string representation of current graph
 		do
 			Result := ""
 			across
@@ -409,20 +512,60 @@ feature -- agent functions
 		end
 
 invariant
-	empty_consistency: vertices.count = 0 implies edges.count = 0
+	empty_consistency:
+		vertices.count = 0 implies edges.count = 0
 	vertex_count = vertices.count
 	vertices.lower = 1
-	unique_vertices: across 1 |..| vertex_count as i all across 1 |..| vertex_count as j all i.item /= j.item implies vertices [i.item] /~ vertices [j.item] end end
-	consistency_incoming_outgoing: across vertices is l_vertex all across l_vertex.outgoing is l_edge all l_edge.destination.has_incoming_edge (l_edge) end and across l_vertex.incoming is l_edge all l_edge.source.has_outgoing_edge (l_edge) end end
+	unique_vertices:
+		across 1 |..| vertex_count is i all
+		across 1 |..| vertex_count is j all
+			i /= j implies vertices [i] /~ vertices [j]
+		end end
+	consistency_incoming_outgoing:
+		across vertices is l_vertex all
+			across l_vertex.outgoing is l_edge all
+				l_edge.destination.has_incoming_edge (l_edge)
+			end
+			and
+			across l_vertex.incoming is l_edge all
+				l_edge.source.has_outgoing_edge (l_edge)
+			end
+		end
 	consistency_incoming_outgoing2:
 			-- ∀e ∈ edges:
 			--	   ∧ e ∈ e.source.outgoing
 			--	   ∧ e ∈ e.destination.incoming
-		across edges as l_edge all l_edge.item.source.has_outgoing_edge (l_edge.item) and l_edge.item.destination.has_incoming_edge (l_edge.item) end
-	count_property_symmetry_1: -- (Σv ∈ vertices : v.outgoing_edge_count + v.incoming_edge_count) = 2 * edge_count
+		across edges is l_edge all
+			l_edge.source.has_outgoing_edge (l_edge)
+			and
+			l_edge.destination.has_incoming_edge (l_edge)
+		end
+	model_consistency_vertex_count:
+		model.vertex_count = vertex_count
+	model_consistency_edge_count:
+		model.edge_count = edge_count
+	model_consistency_vertices:
+		across model.vertices is l_v all
+			has_vertex (l_v)
+		end
+	model_consistency_edges:
+		across model.edges is l_e all
+			has_edge ([l_e.first, l_e.second])
+		end
+	count_property_symmetry_1:
+		-- (Σv ∈ vertices : v.outgoing_edge_count + v.incoming_edge_count) = 2 * edge_count
 		vertices_edge_count = 2 * edge_count
-	count_property_symmetry_2: -- (Σv ∈ vertices : v.outgoing_edge_count) = (Σv ∈ vertices : v.incoming_edge_count)
+	count_property_symmetry_2:
+		-- (Σv ∈ vertices : v.outgoing_edge_count) = (Σv ∈ vertices : v.incoming_edge_count)
 		vertices_outgoing_edge_count = vertices_incoming_edge_count
-	self_loops_are_incomng_and_outgoing: across vertices is l_vertex all across l_vertex.incoming is l_edge some l_edge.source ~ l_edge.destination end = across l_vertex.outgoing is l_edge some l_edge.source ~ l_edge.destination end end
-
+	self_loops_are_incomng_and_outgoing:
+		across vertices is l_vertex all
+			across l_vertex.incoming is l_edge some
+				l_edge.source ~ l_edge.destination
+			end
+			=
+			across l_vertex.outgoing is l_edge some
+				l_edge.source ~ l_edge.destination
+			end
+		end
 end
