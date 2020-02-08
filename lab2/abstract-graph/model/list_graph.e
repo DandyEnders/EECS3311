@@ -45,20 +45,23 @@ feature -- Model
 			-- You must find a way to translate the `LIST_GRAPH` implementation into the mathematical
 			-- model representation of a graph: `COMPARABLE_GRAPH` (which inherits from `GRAPH`).
 		do
+			-- Make empty output
 			create Result.make_empty
 
+			-- Put vertices
 			across
 				vertices is i_vertex
 			loop
 				Result.vertex_extend (i_vertex)
 			end
 
+			-- Put edges
 			across
 				edges is i_edge
 			loop
 				Result.edge_extend ([i_edge.source, i_edge.destination])
 			end
-				-- tofix
+				-- done
 		ensure
 			comment ("Establishes model consistency invariants")
 
@@ -79,14 +82,15 @@ feature {NONE} -- Initialization
 			-- Return the associated vertext object storing `g`, if any.
 			-- Note. In the invariant, it is asserted that all vertices are unique.
 		do
+			-- Check across the vertex and see if that vertex has item g.
 			across
-				vertices as v
+				vertices as l_vertex
 			loop
-				if v.item.item ~ g then
-					Result := v.item
+				if l_vertex.item.item ~ g then
+					Result := l_vertex.item
 				end
 			end
-			-- tofix
+			-- done.
 		ensure
 			mm_attached: attached Result implies model.has_vertex (create {VERTEX [G]}.make (g))
 			mm_not_attached: not attached Result implies not model.has_vertex (create {VERTEX [G]}.make (g))
@@ -160,8 +164,9 @@ feature -- queries
 	vertex_count: INTEGER
 			-- number of vertices
 		do
+			-- Just return the count.
 			Result := vertices.count
-			-- tofix
+			-- done.
 		ensure
 			mm_vertex_count: Result = model.vertex_count
 		end
@@ -169,8 +174,9 @@ feature -- queries
 	edge_count: INTEGER
 			-- number of outgoing edges
 		do
+			-- Just return the edges count.
 			Result := edges.count
-			-- tofix
+			-- done.
 		ensure
 			mm_edge_count: Result = model.edge_count
 		end
@@ -178,8 +184,9 @@ feature -- queries
 	is_empty: BOOLEAN
 			-- does the graph contain no vertices?
 		do
+			-- See if vertex is empty.
 			Result := vertices.is_empty
-			-- tofix
+			-- done.
 		ensure
 			comment ("See invariant empty_consistency")
 			mm_is_empty: Result = model.is_empty
@@ -189,7 +196,7 @@ feature -- queries
 			-- does the current graph have `a_vertex`?
 		do
 			Result := vertices.has (a_vertex)
-			-- tofix
+			-- done.
 		ensure
 			mm_has_vertex: Result = model.has_vertex (a_vertex)
 		end
@@ -198,7 +205,7 @@ feature -- queries
 			-- does the current graph have `a_edge`?
 		do
 			Result := edges.has (a_edge)
-			-- tofix
+			-- done.
 		ensure
 			mm_has_edge: Result = model.has_edge ([a_edge.source, a_edge.destination])
 		end
@@ -206,6 +213,7 @@ feature -- queries
 	edges: ARRAY [EDGE [G]]
 			-- array of all outgoing edges
 		do
+			-- For all vertices, check for its outgoing edges.
 			create Result.make_empty
 			across
 				vertices as l_vertex
@@ -217,7 +225,7 @@ feature -- queries
 				end
 			end
 			Result.compare_objects
-			-- tofix
+			-- done.
 		ensure
 			mm_edges_count: Result.count = model.edge_count
 			mm_edges_membership: across Result as l_edge all model.has_edge ([l_edge.item.source, l_edge.item.destination]) end
@@ -257,17 +265,17 @@ feature -- Advanced Queries
 				Result.force (front, (Result.count + 1)) -- append front
 
 				across
-					front.outgoing_sorted is i_out_edge
+					front.outgoing_sorted is i_out_edge -- get the outgoing edge
 				loop
-					u := i_out_edge.destination
-					u.remove_edge (i_out_edge)
+					u := i_out_edge.destination 	-- get u
+					u.remove_edge (i_out_edge)		-- remove edge from u
 					if(u.incoming_edge_count = 0) then
 						queue.force(u)
 					end
 				end
 			end
 			Result.compare_objects
-			-- tofix
+			-- done.
 		ensure
 			mm_sorted: Result ~ model.topologically_sorted.as_array
 		end
@@ -279,9 +287,11 @@ feature -- Advanced Queries
 			vertex_same: BOOLEAN
 			former_smaller: BOOLEAN
 		do
+			-- size same?
 			count_same := seq.count = vertices.count
 			Result := count_same
 
+			-- vertex same?
 			vertex_same :=
 				across
 					seq is i_vertex
@@ -290,19 +300,21 @@ feature -- Advanced Queries
 				end
 			Result := Result and vertex_same
 
+			-- actual definition of topologically sorted.
+			-- every edge from vertices from left to right has outgoing edges to only right.
 			former_smaller :=
 				across
-					1 |..| seq.count as i	-- Why is i
+					1 |..| seq.count as former	-- former is a list with a pointer on it
 				all
 					across
-						1 |..| seq.count as j
+						1 |..| seq.count as latter
 					all
-						i.item ~ j.item or else (has_edge(create {EDGE[G]}.make(seq[i.item], seq[j.item])) implies i.item < j.item)
+						former.item ~ latter.item or else (has_edge(create {EDGE[G]}.make(seq[former.item], seq[latter.item])) implies former.item < latter.item)
 					end
 				end
 			Result := Result and former_smaller
 
-			-- tofix
+			-- done.
 			ensure
 				sorted: Result ~ model.is_topologically_sorted (seq)
 		end
@@ -351,7 +363,7 @@ feature -- advanced queries (Lab 1)
 				end
 			end
 			Result := visited
-				-- tofix
+				-- done
 		ensure
 			mm_reachable_in_model: model.reachable (src).as_array ~ Result
 		end
@@ -363,8 +375,8 @@ feature -- commands
 		require
 			mm_non_existing_vertex: not model.has_vertex (a_vertex)
 		do
-			vertices.force (a_vertex)
-			-- tofix
+			vertices.force (create {VERTEX[G]}.make (a_vertex.item))
+			-- done.
 		ensure
 			mm_vertex_added: model ~ (old model.deep_twin) + a_vertex
 		end
@@ -395,7 +407,7 @@ feature -- commands
 					dst_att.add_edge (new_edge)
 				end
 			end
-			-- tofix
+			-- done.
 		ensure
 			mm_edge_added: model ~ (old model.deep_twin) |\/| [a_edge.source, a_edge.destination]
 		end
@@ -412,7 +424,7 @@ feature -- commands
 					l_vertex.remove_edge(a_edge)
 				end
 			end
-			-- tofix
+			-- done.
 		ensure
 			mm_edge_removed: model ~ (old model.deep_twin) |\ [a_edge.source, a_edge.destination]
 		end
@@ -447,7 +459,7 @@ feature -- commands
 				-- Finally, when the vertex is isolated in graph, we remove it.
 				vertices.prune_all (v_att)
 			end
-			-- tofix
+			-- done.
 		ensure
 			mm_vertex_removed: model ~ (old model.deep_twin) - a_vertex
 		end
