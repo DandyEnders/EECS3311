@@ -32,7 +32,6 @@ feature {NONE} -- Initialization
 			add_boolean_case (agent t0)
 			add_boolean_case (agent t1)
 			add_boolean_case (agent t2)
-			add_boolean_case (agent t3)
 		end
 
 feature -- tests
@@ -55,101 +54,108 @@ feature -- tests
 			Result :=
 					book.count = 1
 				and	book.has_name ("Jim")
-				and	book.get ("Jim") ~ bd
+--				and	book.get ("Jim") ~ bd
 				and book.find (bd).count = 1
-				and book.find (bd).has ("Jim")
+--				and book.find (bd).has ("Jim")
 			check Result end
 
 			-- This compiles, which allows records to be of types
 			-- DATE and STRING, why? -> We declared record as ANY
 			create address.make_from_string ("York University")
 			book.add ("Jackie", address)
+			Result :=
+					book.count = 2
+				and	book.has_name ("Jackie")
+				and	book.find (address).count = 1
+				and book.find (address).has ("Jackie")
 
-			-- Up to now, we illustrated that storage is f
+			-- Up to now, we illustrated that storage is flexible!
 
+			-- casting
+			-- book.get ("Jim").make_now
+			-- Equivalent to
+			-- if book.get("Jim") instance of DATE then
+			--		bd_of_jim = (DATE) book.get ("Jim");
+			--		bd_of_im.make_now
+			-- end
+--			if attached {DATE} book.get ("Jim") as bd_of_jim then
+--				bd_of_jim.make_now
+--			end
+
+			-- Up to now, we illustrated that retrieval is
+			-- error-prone, because manual, unsystematic casts are needed.
 
 		end
 
 	t1: BOOLEAN
 		local
-			a: ARRAY [CHARACTER]
-			b: ARRAY [INTEGER]
+			book: GENERIC_BOOK[DATE] -- instantiate 'G' by DATE
+			bd: DATE
 		do
-			comment ("t1: test array of chars")
-			a := <<'a', 'b', 'c'>>
-				-- the domain of array `a` is 1..3
-			Result := a [1] = 'a' and a.count = 3
-			check
-				Result
-			end
-			a.put ('z', 1) -- replace a[1]
-			Result := a [1] = 'z' and a.count = 3
-			check
-				Result
-			end
-			a.force ('d', 4) -- extend array
-			Result := a.count = 4 and a [4] = 'd'
-			check
-				Result
-			end
+			comment ("t1: test basic functions of gneric book")
 
-				-- new notation for across using `is`
-			b := <<1, 8, 9, 7>>
-			Result := across b is i all 0 <= i and i <= 9 end
+			-- initialize an empty book
+			create book.make
+			Result := book.count = 0
+			check Result end
+
+			create bd.make (1970, 3, 21)
+			book.add ("Jim", bd)
+			Result :=
+					book.count = 1
+				and	book.has_name ("Jim")
+--				and	book.get ("Jim") ~ bd
+				and book.find (bd).count = 1
+--				and book.find (bd).has ("Jim")
+			check Result end
+
+			-- The following 'add' does not compile.
+			-- why? -> We have committed to date as generic parameter.
+--			create address.make_from_string ("York University")
+--			book.add ("Jackie", address)
+--			Result :=
+--					book.count = 2
+--				and	book.has_name ("Jackie")
+--				and	book.find (address).count = 1
+--				and book.find (address).has ("Jackie")
+
+			-- Up to now, we illustrated that storage is controlled,
+			-- in that only one consistent kind fo records can be stored
+			-- in the book. The kind is committed when the client
+			-- delcreas the local variable 'book'.
+			book.get ("Jim").make_now
+
 		end
 
-feature -- Regular Expression tests
-
-	t2: BOOLEAN
-			-- Test feature 'compile'.
+		t2: BOOLEAN
+			-- Test the declartion and use of a tuple.
 		local
-			a_regexp: RX_PCRE_REGULAR_EXPRESSION
-			-- Perl Compatible regular expressions, using gobo
-			-- https://www.debuggex.com/cheatsheet/regex/pcre
-			-- [abc]: one character of a or b or c
-			-- [abc]*: zero or more repititions of [abc]
-			-- ^: start of string
-			-- $: end of string
+			book: GENERIC_BOOK[DATE]
+			d: DATE
 		do
-			comment ("t2: test regular expression ^[abc]*$")
-			create a_regexp.make
-			a_regexp.compile ("^[abc]*$")
-			Result := a_regexp.is_compiled and a_regexp.recognizes ("aaabbbccc")
-			check
-				Result
-			end
-			Result := a_regexp.captured_substring (0) ~ "aaabbbccc"
-			check
-				Result
-			end
-			Result := not a_regexp.recognizes ("aaabbbcccddd")
+			comment ("t2: Test iteration of generic book")
+			create book.make
+
+			create d.make_now
+			book.add ("Jim", d)
+			book.add ("Jeremy", d)
+
+			Result :=
+				across
+					book as cursor
+				all
+					cursor.item[2] ~ d
+				end
+			check Result end
 		end
 
-	t3: BOOLEAN
-			-- Test feature 'compile'.
-		local
-			a_regexp: RX_PCRE_REGULAR_EXPRESSION
-			match, replace: STRING
-			-- he(ll)o eiffelians; hello ei[ff]elians
-		do
-			comment ("t3: test regular expression groups ((.)\2) repeated letters")
-			create a_regexp.make
-			a_regexp.compile ("((.)\2)") -- group with two repeated letters
-			a_regexp.match ("hello eiffelians")
-			match := a_regexp.captured_substring (0)
-			Result := a_regexp.is_compiled and match ~ "ll"
-			check
-				Result
-			end
-			a_regexp.next_match
-			match := a_regexp.captured_substring (0)
-			Result := a_regexp.is_compiled and match ~ "ff"
-			check
-				Result
-			end
-				-- Put the captured substring \1 between brackets <>
-			replace := a_regexp.replace ("<\1\>")
-			Result := replace ~ "hello ei<ff>elians"
-		end
+--	t3: BOOLEAN
+--			-- Test feature 'compile'.
+--		local
+--			book: GENERIC_BOOK[DATE]
+--		do
+--			comment ("t3: test regular expression groups ((.)\2) repeated letters")
+
+--		end
 
 end
