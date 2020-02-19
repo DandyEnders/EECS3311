@@ -1,0 +1,4 @@
+-- create a new account
+new("id1")
+
+new("id1")

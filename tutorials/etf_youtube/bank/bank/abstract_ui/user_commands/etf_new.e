@@ -6,15 +6,23 @@ note
 
 class
 	ETF_NEW
-inherit 
+inherit
 	ETF_NEW_INTERFACE
 create
 	make
-feature -- command 
+feature -- command
 	new(id: STRING)
     	do
 			-- perform some update on the model state
-			model.default_update
+			if (across
+						model.accounts as cursor
+					some
+						cursor.item.id ~ id
+					end) then
+				model.set_error ("Id " + id + " already exists.")
+			else
+				model.new(id)
+			end
 			etf_cmd_container.on_change.notify ([Current])
     	end
 

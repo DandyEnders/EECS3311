@@ -1,0 +1,7 @@
+{}
+->new("id1")
+{Account with id id1 has balance 0}
+->new("id2")
+{Account with id id1 has balance 0, Account with id id2 has balance 0}
+->deposit("id1",234)
+{Account with id id1 has balance 234, Account with id id2 has balance 0}

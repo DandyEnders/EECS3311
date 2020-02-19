@@ -1,0 +1,5 @@
+{}
+->new("id1")
+{Account with id id1 has balance 0}
+->new("id1")
+ Error: Id id1 already exists.

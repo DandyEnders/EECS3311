@@ -31,7 +31,7 @@ feature {NONE} -- Initialization
 		do
 			-- Set test_mode to false
 			-- to see output of maze generation in console.
-			test_mode := true
+			test_mode := false
 
 			if test_mode then
 				add_test(create {STARTER_TESTS}.make)

@@ -6,17 +6,25 @@ note
 
 class
 	ETF_NEW
-inherit 
+inherit
 	ETF_NEW_INTERFACE
 create
 	make
-feature -- command 
+feature -- command
 	new(a_id: STRING)
-		require else 
+		require else
 			new_precond(a_id)
+		local
+			id: ID
     	do
 			-- perform some update on the model state
 			model.default_update
+			create id.make (a_id)
+			if not model.has (id) then
+				model.new (a_id)
+			else
+				
+			end
 			etf_cmd_container.on_change.notify ([Current])
     	end
 

@@ -6,15 +6,15 @@ note
 
 class
 	ETF_WITHDRAW
-inherit 
+inherit
 	ETF_WITHDRAW_INTERFACE
 create
 	make
-feature -- command 
+feature -- command
 	withdraw(id: STRING ; amount: INTEGER_32)
     	do
 			-- perform some update on the model state
-			model.default_update
+			model.transfer
 			etf_cmd_container.on_change.notify ([Current])
     	end
 

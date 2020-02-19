@@ -22,6 +22,7 @@ feature {NONE} -- Initialization
 		do
 			create s.make_empty
 			i := 0
+			create bank.make_empty
 		end
 
 feature -- model attributes
@@ -41,6 +42,27 @@ feature -- model operations
 			make
 		end
 
+feature -- new
+	bank: FUN[ID, ACCOUNT] -- initialize in make
+
+	has(id: ID): BOOLEAN
+			-- does 'bank' have customer with 'id'?
+		do
+			Result := bank.domain.has(id)
+		end
+
+	new(id: ID)
+		require
+			not has (id)
+		local
+			account: ACCOUNT
+		do
+			create account.make(id)
+			bank.extend ([id, account])
+		end
+
+	deposit()
+
 feature -- queries
 	out : STRING
 		do
@@ -49,6 +71,8 @@ feature -- queries
 			Result.append ("(")
 			Result.append (i.out)
 			Result.append (")")
+			Result.append ("%N  ")
+			Result.append (bank.out) -- add this to print state of the bank
 		end
 
 end
