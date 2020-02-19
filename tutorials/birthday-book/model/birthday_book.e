@@ -18,6 +18,11 @@ inherit
 			out
 		end
 
+	ITERABLE[TUPLE[NAME, BIRTHDAY]]
+		undefine
+			out
+		end
+
 create
 	make
 
@@ -90,6 +95,7 @@ feature
 			end
 		ensure
 			model_override:
+--				model ~ (old model @<+ [a_name, d])
 				model ~ (old model @<+ [a_name, d])
 		end
 
@@ -117,6 +123,7 @@ feature
 			end
 		ensure
 			remind_count:
+--				Result.count = (model @> (d)).count
 				Result.count = (model @> (d)).count
 			remind_model_range_restiction:
 				across (model @> (d)).domain as cr all
@@ -130,6 +137,17 @@ feature
 			Result := imp.count
 		ensure
 			Result = model.count
+		end
+
+feature -- Access
+
+	new_cursor: ITERATION_CURSOR [TUPLE[NAME, BIRTHDAY]]
+			-- Fresh cursor associated with current structure
+		local
+			cursor: BIRTHDAY_BOOK_ITERATION_CURSOR_NEW
+		do
+			create cursor.make (imp)
+			Result := cursor
 		end
 
 feature
