@@ -1,2 +1,7 @@
 mkdir -p /tmp/howden2/EECS3311/lab3
-estudio ./maze/maze.ecf &
+echo /tmp/howden2/EECS3311/lab3
+
+cd ./maze
+estudio maze.ecf &
+
+cd ../

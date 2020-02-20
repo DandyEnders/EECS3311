@@ -1,0 +1,15 @@
+  State: 0 -> ok
+->new_game(easy)
+  State: 1 -> ok
+->move(N)
+  State: 2 -> ok
+->move(W)
+  State: 3 -> ok
+->move(S)
+  State: 4 -> ok
+->move(E)
+  State: 5 -> ok
+->move(S)
+  State: 6 -> ok
+->move(E)
+  State: 7 -> ok

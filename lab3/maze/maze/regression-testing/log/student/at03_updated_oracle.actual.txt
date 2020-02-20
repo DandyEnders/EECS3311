@@ -1,0 +1,37 @@
+  State: 0 -> ok
+->new_game(easy)
+  State: 1 -> ok
+->move(E)
+  State: 2 -> ok
+->move(E)
+  State: 3 -> ok
+->move(E)
+  State: 4 -> ok
+->move(E)
+  State: 5 -> ok
+->move(E)
+  State: 6 -> ok
+->move(E)
+  State: 7 -> ok
+->move(S)
+  State: 8 -> ok
+->move(S)
+  State: 9 -> ok
+->move(S)
+  State: 10 -> ok
+->move(S)
+  State: 11 -> ok
+->move(W)
+  State: 12 -> ok
+->move(S)
+  State: 13 -> ok
+->move(S)
+  State: 14 -> ok
+->move(E)
+  State: 15 -> ok
+->abort
+  State: 16 -> ok
+->new_game(easy)
+  State: 17 -> ok
+->abort
+  State: 18 -> ok
