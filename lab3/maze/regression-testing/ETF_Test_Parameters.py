@@ -10,7 +10,7 @@ root = "../tests/acceptance/"
 # NOTE: Tests can not be named test.expected.txt
 # NOTE: To run all tests in root directory, uses [""] as the test.
 # WARNING: Does not support partial file names with wildcards ie at*.txt
-acceptance_tests = ["./instructor"]
+acceptance_tests = ["./student"]
 
 # acceptance_tests = ["acceptance-tests/at00.txt"
 #                     ,"acceptance-tests/at01.txt"]
@@ -28,7 +28,7 @@ is_expected = False
 oracle = "../oracle.exe"
 
 # Specify the path of the executable built from your project.
-executable = "/tmp/EIFGENs/maze_starter/W_code/maze_starter"
+executable = "/tmp/howden2/EECS3311/lab3/EIFGENs/maze/W_code/maze"
 # Should the program only print tests that do not pass
 print_only_errors = False
 

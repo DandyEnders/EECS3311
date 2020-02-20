@@ -61,7 +61,12 @@ feature -- new
 			bank.extend ([id, account])
 		end
 
-	deposit()
+	deposit(a_id: ID, a_value: VALUE)
+		require
+			has (id)
+		do
+			accounts.
+		end
 
 feature -- queries
 	out : STRING
