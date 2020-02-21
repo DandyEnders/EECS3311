@@ -1,0 +1,4 @@
+new_game(medium)
+move(S)
+solve
+move(S)

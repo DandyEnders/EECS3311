@@ -1,0 +1,6 @@
+new_game(medium)
+move(E)
+move(E)
+solve
+move(S)
+

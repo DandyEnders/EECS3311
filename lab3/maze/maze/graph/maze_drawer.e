@@ -110,6 +110,13 @@ feature -- Commands
 			end
 		end
 
+	place_solution_on(coord: COORDINATE)
+		require
+			is_valid_coordinate(coord)
+		do
+			maze_ascii[coord.row * 2, coord.col][3] := Soln_char
+		end
+
 
 
 

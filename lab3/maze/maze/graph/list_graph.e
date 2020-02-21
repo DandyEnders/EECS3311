@@ -15,7 +15,7 @@
 			Vertices and Edges must be attached.
 		]"
 	ca_ignore: "CA023", "CA023: Undeed parentheses", "CA017", "CA107: Empty compound after then part of if"
-	author: "JSO and JW"
+	author: "JSO and JW and Jinho Hwang"
 	date: "$Date$"
 	revision: "$Revision$"
 
@@ -68,6 +68,15 @@ feature {NONE} -- Initialization
 			mm_empty_graph: model.is_empty
 		end
 
+
+feature -- Iterator Pattern
+	new_cursor: ITERATION_CURSOR [VERTEX[G]]
+		do
+			Result := vertices.new_cursor
+		end
+
+feature -- queries
+
 	get_vertex(g: G): detachable VERTEX[G]
 			-- Return the associated vertext object storing `g`, if any.
 			-- Note. In the invariant, it is asserted that all vertices are unique.
@@ -87,15 +96,6 @@ feature {NONE} -- Initialization
 			mm_not_attached:
 				not attached Result implies not model.has_vertex (create {VERTEX[G]}.make (g))
 		end
-
-
-feature -- Iterator Pattern
-	new_cursor: ITERATION_CURSOR [VERTEX[G]]
-		do
-			Result := vertices.new_cursor
-		end
-
-feature -- queries
 
 	vertices: LIST[VERTEX[G]]
 
@@ -170,6 +170,244 @@ feature -- queries
 					model.has_edge ([l_edge.item.source, l_edge.item.destination])
 				end
 		end
+
+feature -- Advanced Queries
+
+	topologically_sorted: ARRAY [VERTEX [G]]
+			-- Return an array <<..., vi, ..., vj, ...>> such that
+			-- (vi, vj) in edges => i < j
+			-- A topological sort is performed.
+		require
+			is_acyclic: model.is_acyclic
+
+		local
+			clone_vertices: LIST[VERTEX[G]]
+			queue: LINKED_LIST[VERTEX[G]]
+			front: VERTEX[G]
+
+			u: VERTEX[G]
+		do
+			from
+				create Result.make_empty
+				-- init queue, clone vertices, find all non-incoming vertex
+				create queue.make
+				clone_vertices := vertices.deep_twin
+				across clone_vertices is i_vertex loop
+					if (i_vertex.incoming_edge_count = 0) then
+						queue.force(i_vertex)
+					end
+				end
+			until
+				queue.is_empty
+			loop
+				front := queue.first -- get first
+				queue.prune_all (queue.first) -- remove front of queue
+				Result.force (front, (Result.count + 1)) -- append front
+
+				across
+					front.outgoing_sorted is i_out_edge -- get the outgoing edge
+				loop
+					u := i_out_edge.destination 	-- get u
+					u.remove_edge (i_out_edge)		-- remove edge from u
+					if(u.incoming_edge_count = 0) then
+						queue.force(u)
+					end
+				end
+			end
+			Result.compare_objects
+			-- done.
+		ensure
+			mm_sorted: Result ~ model.topologically_sorted.as_array
+		end
+
+	is_topologically_sorted (seq: like topologically_sorted): BOOLEAN
+			-- does `seq` represent a topological order of the current graph?
+		local
+			count_same: BOOLEAN
+			vertex_same: BOOLEAN
+			former_smaller: BOOLEAN
+		do
+			-- size same?
+			count_same := seq.count = vertices.count
+			Result := count_same
+
+			-- vertex same?
+			vertex_same :=
+				across
+					seq is i_vertex
+				all
+					vertices.has (i_vertex)
+				end
+			Result := Result and vertex_same
+
+			-- actual definition of topologically sorted.
+			-- every edge from vertices from left to right has outgoing edges to only right.
+			former_smaller :=
+				across
+					1 |..| seq.count as former	-- former is a list with a pointer on it
+				all
+					across
+						1 |..| seq.count as latter
+					all
+						former.item ~ latter.item or else (has_edge(create {EDGE[G]}.make(seq[former.item], seq[latter.item])) implies former.item < latter.item)
+					end
+				end
+			Result := Result and former_smaller
+
+			-- done.
+			ensure
+				sorted: Result ~ model.is_topologically_sorted (seq)
+		end
+
+	shortest_path (src: VERTEX[G]; dest: VERTEX[G]): ARRAY[VERTEX[G]]
+		require
+			reachable(src).has (dest)
+		local
+			parents: ARRAY[EDGE[G]]
+			current_vertex: VERTEX[G]
+			done_finding_path: BOOLEAN
+
+			result_stack: ARRAYED_STACK[VERTEX[G]]
+
+			my_src, my_dest: VERTEX[G]
+		do
+			parents := reachable_edges(src, dest)
+			create Result.make_empty
+			Result.compare_objects
+
+			create result_stack.make (0)
+
+			my_src := get_vertex(src.item)
+			my_dest := get_vertex(dest.item)
+
+			if attached my_src as att_my_src and attached my_dest as att_my_dest then
+				from
+					current_vertex := att_my_dest
+					result_stack.force (current_vertex)
+				until
+					done_finding_path
+				loop
+					if current_vertex ~ my_src then
+						done_finding_path := true
+					else
+						across
+							parents is i_edge
+						loop
+							if i_edge.destination ~ current_vertex then
+								current_vertex := i_edge.source
+								result_stack.force (current_vertex)
+							end
+						end
+					end
+				end
+			end
+
+			from
+
+			until
+				result_stack.is_empty
+			loop
+				Result.force(result_stack.item, Result.count + 1)
+				result_stack.remove
+			end
+
+		end
+
+	reachable_edges (src: VERTEX[G]; dest: VERTEX[G]): ARRAY[EDGE[G]]
+		require
+			reachable(src).has (dest)
+		local
+			-- my_src, the actual graph's starting point
+			-- queue, the searching queue
+			-- front, the "current" searching vertex
+			my_src: VERTEX[G]
+			visited: ARRAY[VERTEX[G]]
+			queue: LIST[VERTEX[G]]
+			front: VERTEX[G]
+			parents: ARRAY[EDGE[G]]
+		do
+			my_src := get_vertex(src.item)
+			create {LINKED_LIST[VERTEX[G]]} queue.make
+			create visited.make_empty
+
+			create parents.make_empty
+
+			visited.compare_objects
+			-- We do BFS. no parent and distance because we dont need them.
+			if attached my_src as src_att then
+				from
+					visited.force (src_att, visited.count + 1)
+					queue.force (src_att)
+				until
+					queue.is_empty
+				loop
+					front := queue.first
+					queue.prune_all (queue.first)
+					across front.outgoing_sorted is l_edge
+					loop
+						if not visited.has (l_edge.destination) then
+							-- I make sure that what I return is not the actual vertex in graph.
+							visited.force (create {VERTEX[G]}.make(l_edge.destination.item) , visited.count + 1)
+							parents.force (l_edge, parents.count + 1)
+							queue.force (l_edge.destination)
+						end
+					end
+				end
+			end
+
+			Result := parents
+		end
+
+feature -- advanced queries (Lab 1)
+
+	reachable (src: VERTEX [G]): ARRAY [VERTEX [G]]
+			-- Starting with vertex `src`, return the list of vertices visited via a breadth-first search.
+			-- It is required that `outgoing_sorted` is used for each vertex to reach out to its neighbouring vertices,
+			-- so that the resulting array is uniquely ordered.
+			-- Note. `outgoing_sorted` is somewhat analogous to `adjacent` in the abstract algorithm documentation of BFS.
+		require
+			mm_existing_source: model.has_vertex (src)
+		local
+			-- my_src, the actual graph's starting point
+			-- queue, the searching queue
+			-- front, the "current" searching vertex
+			my_src: VERTEX[G]
+			visited: ARRAY[VERTEX[G]]
+			queue: LIST[VERTEX[G]]
+			front: VERTEX[G]
+		do
+			my_src := get_vertex(src.item)
+			create {LINKED_LIST[VERTEX[G]]} queue.make
+			create visited.make_empty
+
+			visited.compare_objects
+			-- We do BFS. no parent and distance because we dont need them.
+			if attached my_src as src_att then
+				from
+					visited.force (src_att, visited.count + 1)
+					queue.force (src_att)
+				until
+					queue.is_empty
+				loop
+					front := queue.first
+					queue.prune_all (queue.first)
+					across front.outgoing_sorted is l_edge
+					loop
+						if not visited.has (l_edge.destination) then
+							-- I make sure that what I return is not the actual vertex in graph.
+							visited.force (create {VERTEX[G]}.make(l_edge.destination.item) , visited.count + 1)
+							queue.force (l_edge.destination)
+						end
+					end
+				end
+			end
+			Result := visited
+				-- done
+		ensure
+			mm_reachable_in_model: model.reachable (src).as_array ~ Result
+		end
+
+
 
 feature -- commands
 

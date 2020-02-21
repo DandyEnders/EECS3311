@@ -149,7 +149,11 @@ def run_tests(tests):
 			if par.format_for_diff:
 				temp = " ".join([par.format_for_diff.strip(), test["act"], test["exp"]])
 				results.append(temp)
+				print(test["act"])
+				print("V V V V V V V V V V V V V V V")
+				#os.system(" ".join(["echo", test["act"]]))
 				os.system(temp)
+				print("^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^")
 				#results.append(" ".join([par.format_for_diff.strip(), test["act"], test["exp"], "&"]))
 			else:
 				results.append("Error: " + test["act"] + " and " + test["exp"] + " do not match.")

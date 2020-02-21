@@ -1,0 +1,2 @@
+new_game(easy)
+move(E)
