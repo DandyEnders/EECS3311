@@ -42,7 +42,7 @@ feature -- Commands
 		do
 			status := main_menu
 		ensure
-			status = main_menu
+			status ~ main_menu
 		end
 
 	set_solving_maze
@@ -51,7 +51,7 @@ feature -- Commands
 		do
 			status := solving_maze
 		ensure
-			status = solving_maze
+			status ~ solving_maze
 		end
 
 	set_solving_maze_used_solve
@@ -61,7 +61,7 @@ feature -- Commands
 		do
 			status := solving_maze_used_solve
 		ensure
-			status = solving_maze_used_solve
+			status ~ solving_maze_used_solve
 		end
 
 feature -- Queires

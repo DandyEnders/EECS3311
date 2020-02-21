@@ -22,21 +22,15 @@ feature {NONE} -- Initialization
 	make
 			-- Initialization for `Current'.
 		do
-
 			create board.make
-
 			create status.make
 			create score.make
-
 			create game_number.make
 			create score.make
-
 			i := 0
 			end_msg := msg.ok
 			maze_msg := msg.empty
 			used_solution_msg := msg.empty
-
-
 		end
 
 feature -- model attributes
@@ -50,9 +44,6 @@ feature -- model attributes
 	used_solution_msg: STRING
 
 feature -- game attributes
---	board: LIST_GRAPH[COORDINATE]
-
---	maze_drawer: MAZE_DRAWER
 
 	board: BOARD
 
@@ -98,17 +89,19 @@ feature -- user_commands
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
+		ensure
+			in_game: not (old status.is_main_menu) implies status.is_main_menu and end_msg ~ msg.ok and maze_msg ~ msg.empty
+			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
 		end
 
 	move (a_direction: like du.N)
 		do
 			if not status.is_main_menu then
-				if board.is_moveable(a_direction) then
-					board.move(a_direction)
+				if board.is_moveable (a_direction) then
+					board.move (a_direction)
 					if board.is_victory then
 						victory_flag := True
 						status.set_main_menu
-
 						inspect board.level
 						when {GAME_LEVEL}.easy then
 							score.increment_value (1)
@@ -117,7 +110,6 @@ feature -- user_commands
 						else -- hard
 							score.increment_value (3)
 						end
-
 						end_msg := msg.ok
 						maze_msg := board.out
 					else
@@ -132,6 +124,10 @@ feature -- user_commands
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
+		ensure
+			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
+			in_game_not_moveable: not (old status.is_main_menu) and not (old board.deep_twin).is_moveable (a_direction) implies end_msg ~ msg.not_a_valid_move and maze_msg ~ msg.empty
+			in_game_movable: not (old status.is_main_menu) and (old board.deep_twin).is_moveable (a_direction) implies end_msg ~ msg.not_a_valid_move and maze_msg ~ msg.empty
 		end
 
 	solve
@@ -140,28 +136,27 @@ feature -- user_commands
 				if board.is_solveable then
 					status.set_solving_maze_used_solve
 					board.solve
-
-					end_msg	:= msg.ok
+					end_msg := msg.ok
 					maze_msg := board.out
 					used_solution_msg := msg.solved_no_points
 				else
-					end_msg	:= msg.not_solvable
+					end_msg := msg.not_solvable
 					maze_msg := msg.empty
 				end
 			else
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
+		ensure
+			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
 		end
 
 	new_game (a_level: like {GAME_LEVEL}.easy)
 		do
 			if status.is_main_menu then
-
 				status.set_solving_maze
-				board.new_game(a_level)
+				board.new_game (a_level)
 				game_number.add_one_more
-
 				inspect a_level
 				when {GAME_LEVEL}.easy then
 					score.increment_max (1)
@@ -170,20 +165,14 @@ feature -- user_commands
 				else -- hard
 					score.increment_max (3)
 				end
-
 				end_msg := msg.ok
 				maze_msg := board.out
 			else
 				end_msg := msg.in_game_already
 				maze_msg := msg.empty
 			end
-
-		end
-
-feature {NONE} -- out format
-	state_line: STRING -- TODO
-		do
-			create Result.make_from_string ("  State: ")
+		ensure
+			in_game: not (old status.is_main_menu) implies end_msg ~ msg.in_game_already and maze_msg ~ msg.empty
 		end
 
 feature -- queries
@@ -196,7 +185,6 @@ feature -- queries
 			Result.append (" -> ")
 			Result.append (end_msg)
 			Result.append (maze_msg)
-
 			if victory_flag then
 				Result.append ("%N")
 				Result.append ("  ")
@@ -210,14 +198,13 @@ feature -- queries
 				end
 			end
 			if not status.is_main_menu or victory_flag then
-				Result.append("%N")
-				Result.append(game_number.out)
-				Result.append("%N")
-				Result.append(score.out)
-				Result.append("%N")
+				Result.append ("%N")
+				Result.append (game_number.out)
+				Result.append ("%N")
+				Result.append (score.out)
+				Result.append ("%N")
 			end
 			victory_flag := False
-
 		end
 
 end

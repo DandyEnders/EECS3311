@@ -69,12 +69,18 @@ feature -- Commands
 			maze_graph := primary_gen.generate_new_maze(a_level)
 			create maze_drawer.make(maze_graph)
 			edges := maze_graph.edges
+			edges.compare_objects
 
 			size := maze_graph.vertices[maze_graph.vertices.count].item.row
 			create player_coord.make ([1,1])
 			create victory_coord.make ([size, size])
 
 			level := a_level
+		ensure
+			same_graph: maze_graph ~ maze_drawer.maze_graph
+			same_edges: edges ~ maze_graph.edges
+			starting_one_one: player_coord ~ create {COORDINATE}.make ([1, 1])
+			finish_size_size: victory_coord ~ create {COORDINATE}.make ([size, size])
 		end
 
 	solve
