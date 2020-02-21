@@ -89,9 +89,6 @@ feature -- user_commands
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
-		ensure
-			in_game: not (old status.is_main_menu) implies status.is_main_menu and end_msg ~ msg.ok and maze_msg ~ msg.empty
-			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
 		end
 
 	move (a_direction: like du.N)
@@ -124,10 +121,6 @@ feature -- user_commands
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
-		ensure
-			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
-			in_game_not_moveable: not (old status.is_main_menu) and not (old board.deep_twin).is_moveable (a_direction) implies end_msg ~ msg.not_a_valid_move and maze_msg ~ msg.empty
-			in_game_movable: not (old status.is_main_menu) and (old board.deep_twin).is_moveable (a_direction) implies end_msg ~ msg.not_a_valid_move and maze_msg ~ msg.empty
 		end
 
 	solve
@@ -147,8 +140,6 @@ feature -- user_commands
 				end_msg := msg.not_in_a_game
 				maze_msg := msg.empty
 			end
-		ensure
-			main_menu: (old status.is_main_menu) implies end_msg ~ msg.not_in_a_game and maze_msg ~ msg.empty
 		end
 
 	new_game (a_level: like {GAME_LEVEL}.easy)
@@ -171,8 +162,6 @@ feature -- user_commands
 				end_msg := msg.in_game_already
 				maze_msg := msg.empty
 			end
-		ensure
-			in_game: not (old status.is_main_menu) implies end_msg ~ msg.in_game_already and maze_msg ~ msg.empty
 		end
 
 feature -- queries

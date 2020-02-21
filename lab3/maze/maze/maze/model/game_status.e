@@ -41,8 +41,6 @@ feature -- Commands
 	set_main_menu
 		do
 			status := main_menu
-		ensure
-			status ~ main_menu
 		end
 
 	set_solving_maze
@@ -50,8 +48,6 @@ feature -- Commands
 			not_going_back: not is_solving_maze_used_solve
 		do
 			status := solving_maze
-		ensure
-			status ~ solving_maze
 		end
 
 	set_solving_maze_used_solve
@@ -60,8 +56,6 @@ feature -- Commands
 			not_solve_main_menu: not is_main_menu
 		do
 			status := solving_maze_used_solve
-		ensure
-			status ~ solving_maze_used_solve
 		end
 
 feature -- Queires
@@ -69,22 +63,16 @@ feature -- Queires
 	is_main_menu: BOOLEAN
 		do
 			Result := status ~ main_menu
-		ensure
-			Result = status ~ main_menu
 		end
 
 	is_solving_maze: BOOLEAN
 		do
 			Result := status ~ solving_maze
-		ensure
-			Result = status ~ solving_maze
 		end
 
 	is_solving_maze_used_solve: BOOLEAN
 		do
 			Result := status ~ solving_maze_used_solve
-		ensure
-			Result = status ~ solving_maze_used_solve
 		end
 
 invariant
