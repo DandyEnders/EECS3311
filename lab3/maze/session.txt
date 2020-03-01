@@ -1,0 +1,8 @@
+new_game(easy)
+move(E)
+move(E)
+move(E)
+move(E)
+move(E)
+move(E)
+move(E)
