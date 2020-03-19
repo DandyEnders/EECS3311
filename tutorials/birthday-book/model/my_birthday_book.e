@@ -117,7 +117,7 @@ feature -- command
 
 		ensure
 			model_override:
-				model ~ (old model @<+ [a_name, d])
+				model ~ (old model.deep_twin).overriden_by ([a_name, d])
 		end
 
 feature -- query
@@ -142,7 +142,11 @@ feature -- query
 --					Result.has (cr.item)
 --				end
 			remind_count:
-				Result.count = (old model.range_restrict_by (d)).count
+				Result.count = (old model.deep_twin).range_restricted_by (d).count
+			remind_model_range_restriction:
+				across (old model.deep_twin).range_restricted_by (d).domain as cr all
+					Result.has (cr.item)
+				end
 
 		end
 
