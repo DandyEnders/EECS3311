@@ -1,5 +1,0 @@
---Testing not finding life
-test(30)
-move(S)
-move(S)
-land

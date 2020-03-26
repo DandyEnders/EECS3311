@@ -1,5 +1,0 @@
---wormhole is_expoler_in_wormhole and explorer is alive
-play
-wormhole
-move(N)
-wormhole
