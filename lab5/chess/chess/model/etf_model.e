@@ -78,9 +78,14 @@ feature -- ETF Commands
 		require
 			board.valid_size (size)
 		do
-			create board.make (size)
-			board.set_started
-			set_message(msg.ok)
+			if board.started then
+				set_message(msg.play_error_already_started)
+			else
+				create board.make (size)
+				board.set_started
+				set_message(msg.ok)
+			end
+
 		end
 
 	redo

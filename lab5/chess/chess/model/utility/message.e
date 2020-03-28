@@ -37,4 +37,9 @@ Feature -- Error
 			Result := "invalid move"
 		end
 
+	play_error_already_started: STRING
+		do
+			Result := "game already started"
+		end
+
 end
