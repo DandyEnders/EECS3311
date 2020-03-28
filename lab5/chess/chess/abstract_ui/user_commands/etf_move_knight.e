@@ -6,17 +6,17 @@ note
 
 class
 	ETF_MOVE_KNIGHT
-inherit 
+inherit
 	ETF_MOVE_KNIGHT_INTERFACE
 create
 	make
-feature -- command 
+feature -- command
 	move_knight(square: TUPLE[x: INTEGER_32; y: INTEGER_32])
-		require else 
+		require else
 			move_knight_precond(square)
     	do
 			-- perform some update on the model state
-			model.default_update
+			model.move_knight(square.x,square.y)
 			etf_cmd_container.on_change.notify ([Current])
     	end
 

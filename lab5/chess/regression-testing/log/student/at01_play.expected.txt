@@ -1,0 +1,8 @@
+  ok, K = King and N = Knight:
+->play(5)
+  ok:
+  K____
+  _____
+  _____
+  _____
+  ____N

@@ -1,2 +1,1 @@
-  state:0.0, ok
-  Welcome! Try test(30)
+  ok, K = King and N = Knight:

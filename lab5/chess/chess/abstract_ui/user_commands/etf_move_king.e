@@ -6,17 +6,17 @@ note
 
 class
 	ETF_MOVE_KING
-inherit 
+inherit
 	ETF_MOVE_KING_INTERFACE
 create
 	make
-feature -- command 
+feature -- command
 	move_king(square: TUPLE[x: INTEGER_32; y: INTEGER_32])
-		require else 
+		require else
 			move_king_precond(square)
     	do
 			-- perform some update on the model state
-			model.default_update
+			model.move_king(square.x, square.y)
 			etf_cmd_container.on_change.notify ([Current])
     	end
 
