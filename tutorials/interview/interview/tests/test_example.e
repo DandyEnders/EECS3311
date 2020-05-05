@@ -84,6 +84,7 @@ feature -- Regular Expression tests
 			-- ^: start of string
 			-- $: end of string
 		do
+--			comment ("t2: test regular expression ^[abc]*$")
 			comment ("t2: test regular expression ^[abc]*$")
 			create a_regexp.make
 			a_regexp.compile ("^[abc]*$")

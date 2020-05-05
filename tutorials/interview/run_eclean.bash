@@ -1,3 +1,3 @@
-eclean /tmp/EECS3311/lab5
+eclean /tmp/EECS3311/interview
 
-rm -rf /tmp/EECS3311/lab5
+rm -rf /tmp/EECS3311/interview
